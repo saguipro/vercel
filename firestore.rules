@@ -1,0 +1,89 @@
+
+/**
+ * @fileoverview Firestore Security Rules for the Family Finance Dashboard application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model. Each user has exclusive
+ * read and write access to their own data, which is nested under their unique user ID.
+ * This prevents any user from accessing another user's financial information.
+ *
+ * Data Structure:
+ * All user-specific data is stored in subcollections under /users/{userId}.
+ * This ensures a clear, scalable, and secure data hierarchy.
+ *
+ * Key Security Decisions:
+ * - Only authenticated users can access any data.
+ * - Users can only perform operations within their own document space (/users/{request.auth.uid}).
+ * - Listing documents outside of one's own data is disallowed.
+ * - Data validation is kept minimal at this stage to allow for rapid development.
+ *
+ * Authorization Independence:
+ * All security rules are based on comparing `request.auth.uid` to the `userId` path parameter.
+ * This is efficient as it does not require reading other documents to authorize a request.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Checks if the requesting user is the owner of the document.
+     * @param {string} userId The user ID from the document path.
+     * @return {bool} True if the authenticated user's ID matches the path's userId.
+     */
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    /**
+     * @description Rules for the /users/{userId} collection.
+     * Users can create their own profile document and can only read, update, or delete their own.
+     */
+    match /users/{userId} {
+      allow read, update, delete: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow list: if false; // Disallow listing all users.
+    }
+
+    /**
+     * @description Rules for the /users/{userId}/transactions/{transactionId} subcollection.
+     * Users can perform all operations (CRUD and list) only on their own transactions.
+     */
+    match /users/{userId}/transactions/{transactionId} {
+       allow read, list, create, update, delete: if isOwner(userId);
+    }
+    
+    /**
+     * @description Rules for the /users/{userId}/goals/{goalId} subcollection.
+     * Users can perform all operations (CRUD and list) only on their own savings goals.
+     */
+    match /users/{userId}/goals/{goalId} {
+       allow read, list, create, update, delete: if isOwner(userId);
+    }
+
+    /**
+     * @description Rules for the /users/{userId}/investments/{investmentId} subcollection.
+     * Users can perform all operations (CRUD and list) only on their own investment holdings.
+     */
+    match /users/{userId}/investments/{investmentId} {
+       allow read, list, create, update, delete: if isOwner(userId);
+    }
+
+    /**
+     * @description Rules for the /users/{userId}/cryptos/{cryptoId} subcollection.
+     * Users can perform all operations (CRUD and list) only on their own crypto holdings.
+     */
+    match /users/{userId}/cryptos/{cryptoId} {
+       allow read, list, create, update, delete: if isOwner(userId);
+    }
+
+    /**
+     * @description Rules for the /users/{userId}/debts/{debtId} subcollection.
+     * Users can perform all operations (CRUD and list) only on their own debts.
+     */
+    match /users/{userId}/debts/{debtId} {
+       allow read, list, create, update, delete: if isOwner(userId);
+    }
+  }
+}
+
+    

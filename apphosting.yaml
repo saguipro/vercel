@@ -1,0 +1,38 @@
+# The apphosting.yaml defines the configuration for your App Hosting backend.
+# You can learn more about this file here:
+# https://firebase.google.com/docs/hosting/app-hosting/apphosting-yaml
+run:
+  # This is the command that starts your application.
+  command: npm run start
+build:
+  # This is the command that builds your application.
+  command: npm run build
+# The following section specifies environment variables available to your build
+# and run environments.
+env:
+  - variable: FRAMEWORKS_LOG_LEVEL
+    value: 'debug'
+# The following section specifies the headers that will be added to every
+# response from your backend.
+headers:
+  - header: 'x-frame-options'
+    value: 'SAMEORIGIN'
+  - header: 'x-content-type-options'
+    value: 'nosniff'
+  - header: 'x-xss-protection'
+    value: '0'
+  - header: 'referrer-policy'
+    value: 'no-referrer'
+  - header: 'content-security-policy'
+    # The value of this header is controlled by a build-time environment
+    # variable. You can learn more about it here:
+    # https://firebase.google.com/docs/hosting/app-hosting/automatic-builds#manage-build-behavior
+    value: ${CONTENT_SECURITY_POLICY}
+# The following section specifies the rules for rewriting and redirecting URLs.
+# You can learn more about it here:
+# https://firebase.google.com/docs/hosting/app-hosting/apphosting-yaml#rewrites-and-redirects
+rewrites:
+  - source: /**
+    # The following setting ensures that your app's 404 page is served when
+    # a user visits a path that does not exist.
+    allowNotFound: true
